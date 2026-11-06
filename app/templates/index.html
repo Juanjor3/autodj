@@ -1,0 +1,1464 @@
+<!DOCTYPE html>
+<html lang="es" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AutoDJ Studio - Mezclador Inteligente de Sesiones</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            canvas: 'var(--color-canvas)',
+            surface: {
+              DEFAULT: 'var(--color-surface)',
+              card: 'var(--color-surface-card)',
+              elevated: 'var(--color-surface-elevated)'
+            },
+            ink: {
+              DEFAULT: 'var(--color-ink)',
+              muted: 'var(--color-ink-muted)',
+              subtle: 'var(--color-ink-subtle)'
+            },
+            hairline: {
+              DEFAULT: 'var(--color-hairline)',
+              soft: 'var(--color-hairline-soft)',
+              strong: 'var(--color-hairline-strong)'
+            },
+            dj: {
+              dark: 'var(--color-canvas)',
+              card: 'var(--color-surface)',
+              cardHover: 'var(--color-surface-card)',
+              neon: 'var(--color-primary-purple)',
+              accent: 'var(--color-accent-cyan)',
+              emerald: 'var(--color-accent-emerald)',
+              rose: 'var(--color-accent-rose)',
+              amber: 'var(--color-accent-amber)'
+            }
+          },
+          borderRadius: {
+            'ricoui-sm': 'var(--radius-sm)',
+            'ricoui-md': 'var(--radius-md)',
+            'ricoui-lg': 'var(--radius-lg)'
+          },
+          boxShadow: {
+            'glow-neon': 'var(--glow-neon)',
+            'glow-cyan': 'var(--glow-cyan)'
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    :root {
+      /* RICOUI DESIGN TOKENS (Standard: ricocc/ricoui-design-md) */
+      --color-canvas: #070a13;
+      --color-surface: #0f172a;
+      --color-surface-card: #131d35;
+      --color-surface-elevated: #1e293b;
+      --color-ink: #f8fafc;
+      --color-ink-muted: #94a3b8;
+      --color-ink-subtle: #64748b;
+      --color-hairline: #1e293b;
+      --color-hairline-soft: rgba(255, 255, 255, 0.07);
+      --color-hairline-strong: rgba(139, 92, 246, 0.35);
+      --color-primary-purple: #8b5cf6;
+      --color-accent-cyan: #06b6d4;
+      --color-accent-emerald: #10b981;
+      --color-accent-rose: #f43f5e;
+      --color-accent-amber: #f59e0b;
+
+      /* Spacing & Radii */
+      --space-xs: 4px;
+      --space-sm: 8px;
+      --space-md: 16px;
+      --space-lg: 24px;
+      --space-xl: 32px;
+      --radius-sm: 6px;
+      --radius-md: 12px;
+      --radius-lg: 18px;
+
+      /* Glow & Elevation */
+      --glow-neon: 0 0 20px rgba(139, 92, 246, 0.25);
+      --glow-cyan: 0 0 20px rgba(6, 182, 212, 0.25);
+
+      /* Typography Scales */
+      --font-size-display: 32px;
+      --font-size-title-lg: 24px;
+      --font-size-title-md: 18px;
+      --font-size-body: 14px;
+      --font-size-caption: 12px;
+      --font-size-micro: 10px;
+      --font-size-mono: 13px;
+    }
+
+    /* Estilos personalizados para barra de scroll y transiciones */
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: var(--color-canvas); }
+    ::-webkit-scrollbar-thumb { background: #262e40; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #3b4661; }
+    .neon-glow {
+      box-shadow: var(--glow-neon);
+    }
+    .neon-border {
+      border-color: var(--color-hairline-strong);
+    }
+    .pulse-neon {
+      animation: pulseNeon 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+    @keyframes pulseNeon {
+      0%, 100% { opacity: 1; filter: drop-shadow(0 0 10px rgba(6, 182, 212, 0.6)); }
+      50% { opacity: .7; filter: drop-shadow(0 0 2px rgba(6, 182, 212, 0.2)); }
+    }
+  </style>
+</head>
+<body class="bg-dj-dark text-slate-100 min-h-screen flex flex-col font-sans selection:bg-purple-600 selection:text-white">
+
+  <!-- Header -->
+  <header class="border-b border-slate-800 bg-dj-card/80 backdrop-blur sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-purple-600 to-cyan-500 flex items-center justify-center text-white shadow-lg">
+          <i class="fa-solid fa-compact-disc text-xl animate-spin" style="animation-duration: 6s;"></i>
+        </div>
+        <div>
+          <h1 class="text-xl font-bold bg-gradient-to-r from-purple-400 via-cyan-400 to-emerald-400 bg-clip-text text-transparent">
+            AutoDJ Studio
+          </h1>
+          <p class="text-xs text-slate-400">Motor de Mezcla Continua & Beat-Matching</p>
+        </div>
+      </div>
+
+      <div class="flex items-center space-x-3 text-xs">
+        <div class="px-3 py-1.5 rounded-full bg-slate-800 border border-slate-700 flex items-center space-x-2">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span id="header-track-count" class="text-slate-300 font-medium">0 canciones cargadas</span>
+        </div>
+        <button onclick="loadDemoTracks()" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 transition flex items-center space-x-1.5">
+          <i class="fa-solid fa-wand-magic-sparkles text-cyan-400"></i>
+          <span>Pistas Demo</span>
+        </button>
+        <button onclick="openDesignModal()" class="px-3 py-1.5 rounded-lg bg-purple-950/60 hover:bg-purple-900/80 text-purple-300 hover:text-white border border-purple-700/50 transition flex items-center space-x-1.5 shadow-sm">
+          <i class="fa-solid fa-palette text-purple-400"></i>
+          <span class="font-semibold">Design System</span>
+          <span class="text-[10px] px-1.5 py-0.5 bg-purple-800/80 text-purple-200 rounded font-mono">DESIGN.md</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+
+    <!-- Grid: Subida y Controles de Mezcla -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+      <!-- Columna 1 & 2: Zona de carga y Lista de canciones -->
+      <div class="lg:col-span-2 space-y-6">
+
+        <!-- Input de archivo oculto -->
+        <input type="file" id="file-input" multiple accept=".mp3,.wav,.flac,.ogg,.m4a,.aiff" class="hidden">
+
+        <!-- Dropzone de Subida -->
+        <div id="dropzone" class="border-2 border-dashed border-slate-700 hover:border-purple-500 bg-dj-card hover:bg-dj-cardHover rounded-2xl p-8 text-center cursor-pointer transition-all duration-200 group">
+          <div class="space-y-3">
+            <div class="w-14 h-14 mx-auto rounded-full bg-purple-900/40 text-purple-400 flex items-center justify-center group-hover:scale-110 group-hover:bg-purple-800/50 transition">
+              <i class="fa-solid fa-cloud-arrow-up text-2xl"></i>
+            </div>
+            <div>
+              <p class="text-base font-semibold text-slate-200">
+                Arrastra tus canciones aquí o <span class="text-purple-400 underline underline-offset-4">haz clic para examinar</span>
+              </p>
+              <p class="text-xs text-slate-400 mt-1">Soporta MP3, WAV, FLAC, OGG, AIFF, M4A</p>
+            </div>
+            <div id="upload-progress-container" class="hidden max-w-xl mx-auto mt-4 p-4 rounded-2xl bg-slate-900/90 border border-purple-500/30 backdrop-blur shadow-xl shadow-purple-950/20 text-left transition-all" onclick="event.stopPropagation()">
+              <!-- Cabecera: Título de pista, contador y porcentaje -->
+              <div class="flex items-center justify-between gap-3 mb-2.5">
+                <div class="flex items-center gap-2.5 min-w-0 flex-1">
+                  <span id="upload-spinner" class="shrink-0 inline-block w-4 h-4 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin"></span>
+                  <span id="upload-status-text" class="text-xs font-semibold text-slate-100 truncate tracking-wide">Preparando subida...</span>
+                </div>
+                <div class="shrink-0 flex items-center gap-2">
+                  <span id="upload-track-badge" class="px-2 py-0.5 rounded-full bg-purple-950 text-purple-300 border border-purple-700/50 text-[10px] font-semibold">1 / 2</span>
+                  <span id="upload-progress-pct" class="text-sm font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-cyan-300 font-mono">0%</span>
+                </div>
+              </div>
+
+              <!-- Barra de progreso continua con brillo animado -->
+              <div class="w-full bg-slate-800/90 rounded-full h-3 overflow-hidden p-0.5 border border-slate-700/60 shadow-inner">
+                <div id="upload-progress-bar" class="bg-gradient-to-r from-purple-600 via-indigo-500 to-cyan-400 h-full rounded-full transition-[width] duration-150 relative overflow-hidden" style="width: 0%">
+                  <div class="absolute inset-0 bg-white/20 animate-pulse"></div>
+                </div>
+              </div>
+
+              <!-- HUD de métricas en tiempo real: bytes, velocidad, ETA -->
+              <div class="mt-3 pt-2.5 border-t border-slate-800 flex flex-wrap items-center justify-between gap-2 text-[11px] font-mono text-slate-400">
+                <div class="flex flex-wrap items-center gap-3">
+                  <span id="upload-detail-bytes" class="text-slate-300 flex items-center gap-1.5" title="Bytes transferidos">
+                    <i class="fa-solid fa-hard-drive text-purple-400"></i>
+                    <span id="upload-detail-bytes-val">0 MB / 0 MB</span>
+                  </span>
+                  <span id="upload-detail-speed" class="text-cyan-300 flex items-center gap-1.5" title="Velocidad de subida">
+                    <i class="fa-solid fa-bolt text-yellow-400"></i>
+                    <span id="upload-detail-speed-val">0.0 MB/s</span>
+                  </span>
+                  <span id="upload-detail-eta" class="text-slate-400 flex items-center gap-1.5" title="Tiempo restante estimado">
+                    <i class="fa-regular fa-clock text-slate-500"></i>
+                    <span id="upload-detail-eta-val">--:--</span>
+                  </span>
+                </div>
+                <div class="flex items-center gap-1 text-[10px] text-slate-400">
+                  <i class="fa-solid fa-layer-group text-slate-500"></i>
+                  <span id="upload-file-detail">Archivo: 0 MB</span>
+                </div>
+              </div>
+
+              <!-- Sub-estado descriptivo de la fase de audio -->
+              <div class="mt-2 text-[11px] text-slate-400 flex items-center gap-2 truncate">
+                <span id="upload-substatus-icon" class="text-purple-400 shrink-0 text-xs">
+                  <i class="fa-solid fa-arrow-up-from-bracket"></i>
+                </span>
+                <span id="upload-substatus-text" class="truncate text-slate-300 font-sans">Iniciando transferencia de audio...</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Lista de canciones cargadas -->
+        <div class="bg-dj-card rounded-2xl border border-slate-800 p-6 space-y-4">
+          <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-800">
+            <div>
+              <h2 class="text-lg font-bold text-slate-100 flex items-center gap-2">
+                <i class="fa-solid fa-list-ol text-cyan-400"></i>
+                <span>Secuencia de Canciones</span>
+                <span id="track-count-badge" class="ml-2 text-xs font-semibold px-2 py-0.5 rounded-full bg-cyan-950/60 text-cyan-300 border border-cyan-800/60">0 canciones</span>
+              </h2>
+              <p class="text-xs text-slate-400">Ordena las pistas manualmente o utiliza la rueda Camelot inteligente</p>
+            </div>
+            <div class="flex items-center space-x-2">
+              <button onclick="autoOrderTracks()" id="btn-auto-order" class="px-3.5 py-2 rounded-xl bg-purple-600/20 hover:bg-purple-600/30 text-purple-300 border border-purple-500/40 text-xs font-semibold flex items-center gap-2 transition hover:scale-105 active:scale-95">
+                <i class="fa-solid fa-circle-nodes text-purple-400"></i>
+                <span>Ordenar Armónico (Camelot)</span>
+              </button>
+              <button onclick="clearAllTracks()" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-rose-950/40 text-slate-400 hover:text-rose-400 border border-slate-700 hover:border-rose-800/50 text-xs transition" title="Limpiar todas las pistas">
+                <i class="fa-solid fa-trash-can"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Contenedor dinámico de pistas -->
+          <div id="track-list" class="space-y-2.5 min-h-[140px] flex flex-col justify-center">
+            <!-- Rellenado por JS -->
+            <div class="text-center py-10 text-slate-500">
+              <i class="fa-solid fa-music text-3xl mb-2 block opacity-40"></i>
+              <p class="text-sm">No hay canciones en la sesión.</p>
+              <p class="text-xs text-slate-600">Sube tus archivos o carga las pistas demo para empezar.</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Columna 3: Controles de Mezcla & Masterización -->
+      <div class="space-y-6">
+
+        <!-- Tarjeta de Estado del Agente CuBe Learner (Docker 24/7) -->
+        <div class="bg-dj-card rounded-2xl border border-purple-500/30 p-5 space-y-3 neon-glow">
+          <div class="flex items-center justify-between">
+            <h3 class="text-sm font-bold text-purple-300 flex items-center gap-2">
+              <i class="fa-solid fa-brain text-purple-400"></i>
+              <span>Modelo Resident DJ (CuBe, Natural, Metro, Radical)</span>
+            </h3>
+            <span id="cube-badge" class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-950/60 text-emerald-300 border border-emerald-700/50 flex items-center gap-1.5">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+              <span id="cube-badge-text">Modelo Conectado</span>
+            </span>
+          </div>
+          <p id="cube-step-text" class="text-xs text-slate-400 truncate">Escaneando sesiones históricas...</p>
+          <div class="grid grid-cols-2 gap-2 text-xs">
+            <div class="bg-slate-900/80 p-2.5 rounded-xl border border-slate-800">
+              <span class="text-slate-500 block text-[10px] uppercase font-bold">Sesiones Escaneadas</span>
+              <span id="cube-sessions-count" class="font-bold text-slate-200">-- / 39</span>
+            </div>
+            <div class="bg-slate-900/80 p-2.5 rounded-xl border border-slate-800">
+              <span class="text-slate-500 block text-[10px] uppercase font-bold">Transiciones Aprendidas</span>
+              <span id="cube-trans-count" class="font-bold text-cyan-400">--</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Panel de Configuración de la Mezcla -->
+        <div class="bg-dj-card rounded-2xl border border-slate-800 p-6 space-y-6 neon-glow">
+          <div>
+            <h2 class="text-lg font-bold text-slate-100 flex items-center gap-2">
+              <i class="fa-solid fa-sliders text-purple-400"></i>
+              <span>Ajustes de la Mezcla</span>
+            </h2>
+            <p class="text-xs text-slate-400 mt-1">Parámetros del motor de transición y masterización</p>
+          </div>
+
+          <!-- Duración de la Transición -->
+          <div class="space-y-2">
+            <label class="text-xs font-semibold text-slate-300 flex justify-between">
+              <span>Duración de Transición</span>
+              <span id="trans-beats-label" class="text-cyan-400 font-bold">64 beats (16 compases en 4/4)</span>
+            </label>
+            <div class="grid grid-cols-4 gap-2">
+              <button onclick="setTransitionBeats(16)" class="trans-btn py-2 rounded-xl bg-slate-800 border border-slate-700 text-xs font-medium text-slate-300 hover:bg-slate-700 transition" data-beats="16">16 b</button>
+              <button onclick="setTransitionBeats(32)" class="trans-btn py-2 rounded-xl bg-slate-800 border border-slate-700 text-xs font-medium text-slate-300 hover:bg-slate-700 transition" data-beats="32">32 b</button>
+              <button onclick="setTransitionBeats(48)" class="trans-btn py-2 rounded-xl bg-slate-800 border border-slate-700 text-xs font-medium text-slate-300 hover:bg-slate-700 transition" data-beats="48">48 b</button>
+              <button onclick="setTransitionBeats(64)" class="trans-btn py-2 rounded-xl bg-purple-600 border border-purple-500 text-xs font-bold text-white transition" data-beats="64">64 b</button>
+            </div>
+            <p class="text-[11px] text-slate-500">64 beats (16 compases): cambio estructural en compás 8 (tiempo 32), idóneo para música electrónica.</p>
+          </div>
+
+          <!-- Nombre de la Sesión -->
+          <div class="space-y-1.5">
+            <label class="text-xs font-semibold text-slate-300" for="session-name">Nombre de la Sesión</label>
+            <div class="relative">
+              <input type="text" id="session-name" placeholder="mi_sesion_dj.wav" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-purple-500 transition">
+              <span class="absolute right-3 top-2.5 text-xs text-slate-500">.wav</span>
+            </div>
+          </div>
+
+          <!-- Separación por Stems (IA) -->
+          <div class="bg-purple-950/30 rounded-xl p-3 border border-purple-800/50 space-y-2">
+            <div class="flex items-center justify-between">
+              <label for="toggle-stems" class="text-xs font-bold text-purple-300 flex items-center gap-2 cursor-pointer select-none">
+                <i class="fa-solid fa-brain text-purple-400"></i>
+                <span>Separación por Stems (IA)</span>
+              </label>
+              <input type="checkbox" id="toggle-stems" checked class="w-4 h-4 accent-purple-600 rounded cursor-pointer">
+            </div>
+            <p class="text-[11px] text-slate-400 leading-relaxed">
+              Aísla bombos, bajos, melodías y voces (Meta Demucs v4) en la transición. Previene choque de voces, clava el Bass Swap y corta en seco al compás (estilo MiGue).
+            </p>
+          </div>
+
+          <!-- Características de la mezcla -->
+          <div class="bg-slate-900/60 rounded-xl p-3 border border-slate-800/80 space-y-2 text-xs text-slate-400">
+            <div class="flex items-center gap-2">
+              <i class="fa-solid fa-brain text-purple-400"></i>
+              <span><strong>IA 4-Stems:</strong> Aislamiento de bombos, bajos, melodías y voces</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <i class="fa-solid fa-check text-emerald-400"></i>
+              <span><strong>Cuadratura Canónica:</strong> Conteo de compases hacia atrás (Regla 4 y 8)</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <i class="fa-solid fa-check text-emerald-400"></i>
+              <span><strong>Phase Lock:</strong> Sincronización de bombos sub-milisegundo (< 1 ms)</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <i class="fa-solid fa-check text-emerald-400"></i>
+              <span><strong>Técnica EQ:</strong> Bass Swap 250 Hz (Anti-cancelación 30-120 Hz)</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <i class="fa-solid fa-check text-emerald-400"></i>
+              <span><strong>Mastering:</strong> Peak Limiter -0.5 dBFS anti-clipping</span>
+            </div>
+          </div>
+
+          <!-- Botón de Mezcla -->
+          <button id="btn-mix" onclick="startMixing()" class="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-purple-600 to-cyan-500 hover:from-purple-500 hover:to-cyan-400 text-white font-bold text-sm shadow-lg shadow-purple-600/30 flex items-center justify-center gap-2.5 transition active:scale-[0.98]">
+            <i class="fa-solid fa-play"></i>
+            <span>Mezclar Sesión Ahora</span>
+          </button>
+        </div>
+
+        <!-- Estado / Progreso de la mezcla -->
+        <div id="mixing-status-card" class="hidden bg-dj-card rounded-2xl border border-purple-500/30 p-6 space-y-4">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-purple-400 uppercase tracking-wider flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-purple-400 animate-ping"></span>
+              <span>Procesando Sesión</span>
+            </span>
+            <span id="mix-progress-pct" class="text-xs font-mono text-cyan-400 font-bold">0%</span>
+          </div>
+          <div class="w-full bg-slate-800 rounded-full h-2.5 overflow-hidden">
+            <div id="mix-progress-bar" class="bg-gradient-to-r from-purple-500 via-cyan-400 to-emerald-400 h-2.5 rounded-full transition-all duration-300" style="width: 0%"></div>
+          </div>
+          <div id="mix-log-box" class="bg-slate-900 rounded-xl p-3 text-[11px] font-mono text-slate-300 max-h-32 overflow-y-auto space-y-1 border border-slate-800">
+            <!-- Logs en vivo -->
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- Sección de Sesión Terminada: Reproductor & Descarga -->
+    <div id="session-result-card" class="hidden bg-dj-card rounded-2xl border border-emerald-500/40 p-6 sm:p-8 space-y-6 shadow-2xl">
+      <div class="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-slate-800">
+        <div class="flex items-center space-x-3">
+          <div class="w-12 h-12 rounded-xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 flex items-center justify-center text-2xl">
+            <i class="fa-solid fa-circle-check"></i>
+          </div>
+          <div>
+            <h2 class="text-xl font-bold text-white flex items-center gap-2">
+              <span>Sesión Mezclada Lista</span>
+              <span class="text-xs px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-medium">Masterizada</span>
+            </h2>
+            <p id="result-meta" class="text-xs text-slate-400">Duración: -- | Estéreo 44.1 kHz | Sin distorsión</p>
+          </div>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2.5">
+          <a id="btn-download-wav" href="#" download class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white text-xs font-bold shadow-lg shadow-emerald-900/30 flex items-center gap-2 transition hover:scale-105 active:scale-95">
+            <i class="fa-solid fa-file-audio"></i>
+            <span>Descargar WAV (Master)</span>
+          </a>
+          <a id="btn-download-mp3" href="#" download class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-bold shadow-lg shadow-purple-900/30 flex items-center gap-2 transition hover:scale-105 active:scale-95">
+            <i class="fa-solid fa-music text-purple-200"></i>
+            <span>Descargar MP3 (256 kbps)</span>
+          </a>
+          <a id="btn-download-cue" href="#" download class="px-3.5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-semibold flex items-center gap-1.5 transition">
+            <i class="fa-solid fa-file-lines text-cyan-400"></i>
+            <span>Tracklist</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Reproductor Web continuo -->
+      <div class="space-y-3 bg-slate-900/90 rounded-xl p-4 border border-slate-800">
+        <div class="flex items-center justify-between text-xs text-slate-400 font-medium">
+          <span id="player-track-now" class="text-slate-200 font-bold truncate max-w-md">Reproduciendo sesión...</span>
+          <span id="player-time-display">00:00 / 00:00</span>
+        </div>
+        <audio id="session-audio-element" controls class="w-full h-10 accent-purple-500"></audio>
+      </div>
+
+      <!-- Tracklist interactivo -->
+      <div class="space-y-2">
+        <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+          <i class="fa-solid fa-clock text-cyan-400"></i>
+          <span>Tracklist con marcas de tiempo (Haz clic para saltar):</span>
+        </h3>
+        <div id="cue-sheet-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5">
+          <!-- Cues dinámicos -->
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="border-t border-slate-800 py-6 text-center text-xs text-slate-500">
+    <p>AutoDJ Studio &bull; Acelerado con PyRubberband, Librosa, Pedalboard & SoundFile</p>
+  </footer>
+
+  <!-- Scripts de la Aplicación -->
+  <script>
+    let tracks = [];
+    let currentTransitionBeats = 64;
+    let pollInterval = null;
+
+    // Inicialización
+    document.addEventListener("DOMContentLoaded", () => {
+      loadTrackList();
+      setupDropzone();
+    });
+
+    function setTransitionBeats(beats) {
+      currentTransitionBeats = beats;
+      document.getElementById("trans-beats-label").innerText = `${beats} compases (beats)`;
+      document.querySelectorAll(".trans-btn").forEach(btn => {
+        const b = parseInt(btn.getAttribute("data-beats"));
+        if (b === beats) {
+          btn.className = "trans-btn py-2 rounded-xl bg-purple-600 border border-purple-500 text-xs font-bold text-white transition";
+        } else {
+          btn.className = "trans-btn py-2 rounded-xl bg-slate-800 border border-slate-700 text-xs font-medium text-slate-300 hover:bg-slate-700 transition";
+        }
+      });
+    }
+
+    let isUploading = false;
+
+    function escapeHtml(text) {
+      if (!text) return "";
+      return text.toString()
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function formatBytes(bytes, decimals = 1) {
+      if (!bytes || bytes <= 0) return "0 B";
+      const k = 1024;
+      const dm = decimals < 0 ? 0 : decimals;
+      const sizes = ["B", "KB", "MB", "GB"];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + " " + sizes[i];
+    }
+
+    // Configurar Dropzone
+    function setupDropzone() {
+      const dropzone = document.getElementById("dropzone");
+      const fileInput = document.getElementById("file-input");
+
+      // Evitar que el navegador abra el archivo de audio si se suelta fuera del dropzone
+      window.addEventListener("dragover", (e) => e.preventDefault(), false);
+      window.addEventListener("drop", (e) => e.preventDefault(), false);
+
+      dropzone.addEventListener("click", (e) => {
+        if (!isUploading) {
+          fileInput.click();
+        }
+      });
+
+      dropzone.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        dropzone.classList.add("border-purple-500", "bg-dj-cardHover");
+      });
+
+      dropzone.addEventListener("dragleave", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        dropzone.classList.remove("border-purple-500", "bg-dj-cardHover");
+      });
+
+      dropzone.addEventListener("drop", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        dropzone.classList.remove("border-purple-500", "bg-dj-cardHover");
+        if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+          uploadFiles(e.dataTransfer.files);
+        }
+      });
+
+      fileInput.addEventListener("change", () => {
+        if (fileInput.files && fileInput.files.length > 0) {
+          uploadFiles(fileInput.files);
+        }
+      });
+    }
+
+    // Subir un archivo individual con monitoreo granular de progreso XHR
+    function uploadSingleFileWithProgress(file, onProgress) {
+      return new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        const formData = new FormData();
+        formData.append("files", file);
+
+        xhr.upload.addEventListener("progress", (evt) => {
+          if (evt.lengthComputable) {
+            onProgress({
+              stage: "uploading",
+              loaded: evt.loaded,
+              total: evt.total
+            });
+          }
+        });
+
+        xhr.upload.addEventListener("load", () => {
+          onProgress({
+            stage: "analyzing",
+            loaded: file.size,
+            total: file.size
+          });
+        });
+
+        xhr.addEventListener("load", () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            try {
+              resolve(JSON.parse(xhr.responseText));
+            } catch (e) {
+              resolve(xhr.responseText);
+            }
+          } else {
+            let errorMsg = `Error del servidor (${xhr.status})`;
+            try {
+              const errData = JSON.parse(xhr.responseText);
+              if (errData && errData.detail) errorMsg = errData.detail;
+            } catch (_) {}
+            reject(new Error(errorMsg));
+          }
+        });
+
+        xhr.timeout = 180000;
+        xhr.addEventListener("timeout", () => reject(new Error("Tiempo de espera agotado al procesar audio en el servidor")));
+        xhr.addEventListener("error", () => reject(new Error("Error de conexión durante la subida")));
+        xhr.addEventListener("abort", () => reject(new Error("Subida cancelada")));
+
+        xhr.open("POST", "/api/upload");
+        xhr.send(formData);
+      });
+    }
+
+    // Subir archivos al servidor con progreso continuo byte a byte y HUD detallado
+    async function uploadFiles(fileList) {
+      if (!fileList || fileList.length === 0 || isUploading) return;
+      isUploading = true;
+
+      const files = Array.from(fileList);
+      const totalBatchBytes = files.reduce((acc, f) => acc + (f.size || 0), 0);
+
+      const progressContainer = document.getElementById("upload-progress-container");
+      const progressBar = document.getElementById("upload-progress-bar");
+      const progressText = document.getElementById("upload-status-text");
+      const progressPct = document.getElementById("upload-progress-pct");
+      const trackBadge = document.getElementById("upload-track-badge");
+      const bytesVal = document.getElementById("upload-detail-bytes-val");
+      const speedVal = document.getElementById("upload-detail-speed-val");
+      const etaVal = document.getElementById("upload-detail-eta-val");
+      const fileDetail = document.getElementById("upload-file-detail");
+      const substatusIcon = document.getElementById("upload-substatus-icon");
+      const substatusText = document.getElementById("upload-substatus-text");
+      const spinner = document.getElementById("upload-spinner");
+
+      progressContainer.classList.remove("hidden");
+      progressBar.classList.remove("from-emerald-500", "to-teal-400");
+      progressBar.classList.add("from-purple-600", "via-indigo-500", "to-cyan-400");
+      if (spinner) spinner.classList.remove("hidden");
+
+      let completedBatchBytes = 0;
+      let lastSpeedTime = performance.now();
+      let lastSpeedBytes = 0;
+      let currentSpeed = 0;
+      let failedFiles = 0;
+
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const fileWeight = totalBatchBytes > 0 ? (file.size / totalBatchBytes) : (1 / files.length);
+        const completedWeight = totalBatchBytes > 0 ? (completedBatchBytes / totalBatchBytes) : (i / files.length);
+
+        if (trackBadge) trackBadge.innerText = `${i + 1} / ${files.length}`;
+        progressText.innerText = `[${i + 1}/${files.length}] ${file.name}`;
+        if (fileDetail) fileDetail.innerText = `Archivo: ${formatBytes(file.size)}`;
+
+        let analysisTimer = null;
+        let simulatedAnalysisPct = 0;
+
+        try {
+          await uploadSingleFileWithProgress(file, (info) => {
+            const now = performance.now();
+            if (info.stage === "uploading") {
+              // Cálculo de velocidad de subida en tiempo real
+              const timeDiff = (now - lastSpeedTime) / 1000;
+              const bytesSoFar = completedBatchBytes + info.loaded;
+              if (timeDiff >= 0.2) {
+                const bytesDiff = bytesSoFar - lastSpeedBytes;
+                const instantSpeed = bytesDiff / timeDiff;
+                currentSpeed = currentSpeed === 0 ? instantSpeed : (0.65 * currentSpeed + 0.35 * instantSpeed);
+                lastSpeedTime = now;
+                lastSpeedBytes = bytesSoFar;
+
+                if (speedVal) speedVal.innerText = `${formatBytes(currentSpeed)}/s`;
+                const remainingBatchBytes = Math.max(0, totalBatchBytes - bytesSoFar);
+                if (etaVal) {
+                  if (currentSpeed > 512) {
+                    const etaSec = Math.ceil(remainingBatchBytes / currentSpeed);
+                    etaVal.innerText = etaSec < 60 ? `~${etaSec}s rest.` : `~${Math.floor(etaSec / 60)}m ${etaSec % 60}s`;
+                  } else {
+                    etaVal.innerText = "--:--";
+                  }
+                }
+              }
+
+              // Ponderación de pista: 75% subida de paquetes de audio + 25% análisis en servidor
+              const fileFraction = (info.loaded / info.total) * 0.75;
+              const overallFraction = completedWeight + (fileFraction * fileWeight);
+              const overallPct = Math.min(99, Math.max(0, Math.round(overallFraction * 100)));
+
+              progressBar.style.width = `${overallPct}%`;
+              progressPct.innerText = `${overallPct}%`;
+              if (bytesVal) bytesVal.innerText = `${formatBytes(completedBatchBytes + info.loaded)} / ${formatBytes(totalBatchBytes)}`;
+              
+              const filePct = Math.round((info.loaded / info.total) * 100);
+              if (substatusIcon) substatusIcon.innerHTML = '<i class="fa-solid fa-arrow-up-from-bracket text-cyan-400"></i>';
+              if (substatusText) substatusText.innerText = `Subiendo paquetes de audio al servidor... (${filePct}% de esta pista)`;
+
+            } else if (info.stage === "analyzing") {
+              // Bytes enviados al 100%. Análisis de BPM, Camelot y mapa vocal en curso
+              if (speedVal) speedVal.innerText = "Procesando";
+              if (etaVal) etaVal.innerText = "Analizando...";
+              if (substatusIcon) substatusIcon.innerHTML = '<i class="fa-solid fa-brain text-purple-400 animate-pulse"></i>';
+              if (substatusText) substatusText.innerText = `Analizando tempo (BPM), escala armónica Camelot y mapa vocal...`;
+
+              if (!analysisTimer) {
+                analysisTimer = setInterval(() => {
+                  simulatedAnalysisPct = Math.min(95, simulatedAnalysisPct + 3);
+                  const analysisFraction = 0.75 + (simulatedAnalysisPct / 100) * 0.23;
+                  const overallFraction = completedWeight + (analysisFraction * fileWeight);
+                  const overallPct = Math.min(99, Math.max(0, Math.round(overallFraction * 100)));
+                  progressBar.style.width = `${overallPct}%`;
+                  progressPct.innerText = `${overallPct}%`;
+                }, 250);
+              }
+            }
+          });
+
+          if (analysisTimer) {
+            clearInterval(analysisTimer);
+            analysisTimer = null;
+          }
+
+          completedBatchBytes += file.size;
+          const finishedFraction = totalBatchBytes > 0 ? (completedBatchBytes / totalBatchBytes) : ((i + 1) / files.length);
+          const finishedPct = Math.min(100, Math.round(finishedFraction * 100));
+          progressBar.style.width = `${finishedPct}%`;
+          progressPct.innerText = `${finishedPct}%`;
+          if (bytesVal) bytesVal.innerText = `${formatBytes(completedBatchBytes)} / ${formatBytes(totalBatchBytes)}`;
+          if (substatusIcon) substatusIcon.innerHTML = '<i class="fa-solid fa-circle-check text-emerald-400"></i>';
+          if (substatusText) substatusText.innerText = `¡Pista "${file.name}" analizada e integrada con éxito!`;
+
+          // Recargar lista inmediatamente para que cada tema aparezca en pantalla al instante
+          await loadTrackList();
+
+        } catch (err) {
+          failedFiles++;
+          if (analysisTimer) {
+            clearInterval(analysisTimer);
+            analysisTimer = null;
+          }
+          console.error(`Error procesando ${file.name}:`, err);
+          if (substatusIcon) substatusIcon.innerHTML = '<i class="fa-solid fa-circle-xmark text-rose-400"></i>';
+          if (substatusText) substatusText.innerText = `Error en "${file.name}": ${err.message}`;
+        }
+      }
+
+      // Estado final completado
+      if (failedFiles === 0) {
+        progressBar.style.width = "100%";
+        progressPct.innerText = "100%";
+        progressBar.classList.remove("from-purple-600", "via-indigo-500", "to-cyan-400");
+        progressBar.classList.add("from-emerald-500", "to-teal-400");
+        progressText.innerText = `¡Todas las pistas (${files.length}) procesadas y analizadas!`;
+        if (substatusIcon) substatusIcon.innerHTML = '<i class="fa-solid fa-sparkles text-amber-400"></i>';
+        if (substatusText) substatusText.innerText = `Listo para mezclar. Cuadre de compases y ecualización preparados.`;
+        if (speedVal) speedVal.innerText = "Completado";
+        if (etaVal) etaVal.innerText = "0s";
+      } else {
+        progressText.innerText = `Proceso concluido (${files.length - failedFiles}/${files.length} pistas listas)`;
+        if (substatusIcon) substatusIcon.innerHTML = '<i class="fa-solid fa-triangle-exclamation text-amber-400"></i>';
+        if (substatusText) substatusText.innerText = `${failedFiles} pista(s) no pudieron procesarse.`;
+      }
+      if (spinner) spinner.classList.add("hidden");
+
+      setTimeout(() => {
+        progressContainer.classList.add("hidden");
+        progressBar.style.width = "0%";
+        progressPct.innerText = "0%";
+        if (spinner) spinner.classList.remove("hidden");
+        isUploading = false;
+      }, 3000);
+
+      const fileInput = document.getElementById("file-input");
+      if (fileInput) fileInput.value = "";
+      await loadTrackList();
+    }
+
+    // Cargar pistas del servidor
+    async function loadTrackList() {
+      try {
+        const resp = await fetch("/api/tracks");
+        tracks = await resp.json();
+        renderTrackList();
+      } catch (err) {
+        console.error("Error al cargar lista:", err);
+      }
+    }
+
+    // Generar pistas demo
+    async function loadDemoTracks() {
+      try {
+        const btn = event.currentTarget;
+        btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i><span>Generando...</span>`;
+        await fetch("/api/demo-tracks", { method: "POST" });
+        await loadTrackList();
+        btn.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles text-cyan-400"></i><span>Pistas Demo</span>`;
+      } catch (err) {
+        alert("Error al generar demos: " + err.message);
+      }
+    }
+
+    // Limpiar todas las pistas
+    async function clearAllTracks() {
+      if (tracks.length === 0) return;
+      if (!confirm("¿Deseas eliminar todas las canciones de la lista de entrada?")) return;
+      await fetch("/api/tracks", { method: "DELETE" });
+      await loadTrackList();
+    }
+
+    // Renderizar tarjetas de canciones
+    function renderTrackList() {
+      const container = document.getElementById("track-list");
+      const countBadge = document.getElementById("track-count-badge");
+      if (countBadge) {
+        countBadge.innerText = `${tracks.length} canción(es)`;
+      }
+      const headerCount = document.getElementById("header-track-count");
+      if (headerCount) {
+        headerCount.innerText = `${tracks.length} canciones cargadas`;
+      }
+
+      if (tracks.length === 0) {
+        container.innerHTML = `
+          <div class="text-center py-10 text-slate-500">
+            <i class="fa-solid fa-music text-3xl mb-2 block opacity-40"></i>
+            <p class="text-sm">No hay canciones en la sesión.</p>
+            <p class="text-xs text-slate-600">Sube tus archivos o pulsa 'Pistas Demo' para empezar.</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = "";
+      tracks.forEach((track, idx) => {
+        const isMinor = track.camelot.includes("A");
+        const keyBadgeColor = isMinor 
+          ? "bg-purple-950/60 text-purple-300 border-purple-800/60" 
+          : "bg-emerald-950/60 text-emerald-300 border-emerald-800/60";
+
+        const card = document.createElement("div");
+        card.className = "flex flex-col sm:flex-row items-start sm:items-center justify-between p-3.5 bg-slate-900/80 hover:bg-slate-800/90 border border-slate-800 hover:border-slate-700 rounded-xl transition gap-3";
+        card.innerHTML = `
+          <div class="flex items-center space-x-3 min-w-0 flex-1">
+            <div class="flex items-center space-x-1">
+              <button onclick="moveTrack(${idx}, -1)" ${idx === 0 ? "disabled" : ""} class="p-1 rounded hover:bg-slate-700 text-slate-400 hover:text-white disabled:opacity-20 disabled:hover:bg-transparent transition text-xs" title="Mover arriba">
+                <i class="fa-solid fa-chevron-up"></i>
+              </button>
+              <button onclick="moveTrack(${idx}, 1)" ${idx === tracks.length - 1 ? "disabled" : ""} class="p-1 rounded hover:bg-slate-700 text-slate-400 hover:text-white disabled:opacity-20 disabled:hover:bg-transparent transition text-xs" title="Mover abajo">
+                <i class="fa-solid fa-chevron-down"></i>
+              </button>
+            </div>
+
+            <span class="w-6 h-6 rounded-lg bg-slate-800 flex items-center justify-center text-xs font-mono font-bold text-slate-400">
+              ${idx + 1}
+            </span>
+
+            <div class="min-w-0 flex-1">
+              <p class="text-xs sm:text-sm font-semibold text-slate-200 truncate" title="${escapeHtml(track.filename)}">
+                ${escapeHtml(track.title || track.filename)}
+              </p>
+              <div class="flex items-center space-x-2 mt-1">
+                <span class="px-2 py-0.5 rounded-md text-[10px] font-mono font-bold border ${keyBadgeColor}">
+                  <i class="fa-solid fa-key mr-1 opacity-70"></i>${track.camelot} (${track.key_name})
+                </span>
+                <span class="px-2 py-0.5 rounded-md text-[10px] font-mono bg-cyan-950/60 text-cyan-300 border border-cyan-800/60 font-bold">
+                  <i class="fa-solid fa-gauge-high mr-1 opacity-70"></i>${track.bpm.toFixed(1)} BPM
+                </span>
+                <span class="text-[11px] text-slate-500">
+                  ${formatTime(track.duration)}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex items-center space-x-2 w-full sm:w-auto justify-between sm:justify-end">
+            <!-- Audio preview -->
+            <audio controls src="/api/stream/${encodeURIComponent(track.filename)}" class="h-7 w-40 sm:w-44 accent-purple-500"></audio>
+            <!-- Borrar -->
+            <button onclick="deleteTrackByIndex(${idx})" class="p-2 rounded-lg bg-slate-800 hover:bg-rose-950/40 text-slate-400 hover:text-rose-400 border border-slate-700 hover:border-rose-800 transition text-xs" title="Eliminar pista">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function deleteTrackByIndex(idx) {
+      const track = tracks[idx];
+      if (!track) return;
+      deleteTrack(track.filename);
+    }
+
+    // Mover pista arriba o abajo
+    function moveTrack(index, direction) {
+      const newIndex = index + direction;
+      if (newIndex < 0 || newIndex >= tracks.length) return;
+      const item = tracks.splice(index, 1)[0];
+      tracks.splice(newIndex, 0, item);
+      renderTrackList();
+    }
+
+    // Ordenar automáticamente por Camelot y BPM
+    async function autoOrderTracks() {
+      if (tracks.length < 2) return;
+      const btn = document.getElementById("btn-auto-order");
+      btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i><span>Optimizando...</span>`;
+
+      try {
+        const resp = await fetch("/api/auto-order", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ tracks: tracks })
+        });
+        tracks = await resp.json();
+        renderTrackList();
+      } catch (err) {
+        alert("Error al ordenar pistas: " + err.message);
+      } finally {
+        btn.innerHTML = `<i class="fa-solid fa-circle-nodes text-purple-400"></i><span>Ordenar Armónico (Camelot)</span>`;
+      }
+    }
+
+    // Borrar pista individual
+    async function deleteTrack(encodedFilename) {
+      await fetch(`/api/tracks/${encodedFilename}`, { method: "DELETE" });
+      await loadTrackList();
+    }
+
+    // Iniciar el proceso de mezcla
+    async function startMixing() {
+      if (tracks.length === 0) {
+        alert("Por favor, añade al menos una canción a la sesión.");
+        return;
+      }
+
+      const sessionNameInput = document.getElementById("session-name").value.trim();
+      const btnMix = document.getElementById("btn-mix");
+      const statusCard = document.getElementById("mixing-status-card");
+      const progressBar = document.getElementById("mix-progress-bar");
+      const progressPct = document.getElementById("mix-progress-pct");
+      const logBox = document.getElementById("mix-log-box");
+      const resultCard = document.getElementById("session-result-card");
+
+      resultCard.classList.add("hidden");
+      statusCard.classList.remove("hidden");
+      btnMix.disabled = true;
+      btnMix.classList.add("opacity-50", "cursor-not-allowed");
+      btnMix.innerHTML = `<i class="fa-solid fa-compact-disc fa-spin"></i><span>Mezclando pistas...</span>`;
+      logBox.innerHTML = `<div>[${new Date().toLocaleTimeString()}] Iniciando motor de mezcla DJ...</div>`;
+
+      try {
+        const resp = await fetch("/api/mix", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            filenames: tracks.map(t => t.filename),
+            transition_beats: currentTransitionBeats,
+            session_name: sessionNameInput || null,
+            use_stems: document.getElementById("toggle-stems") ? document.getElementById("toggle-stems").checked : true
+          })
+        });
+
+        if (!resp.ok) throw new Error("Error al procesar la mezcla");
+
+        // Polling de estado
+        pollInterval = setInterval(async () => {
+          const statusResp = await fetch("/api/status");
+          const status = await statusResp.json();
+
+          progressBar.style.width = `${status.progress}%`;
+          progressPct.innerText = `${status.progress}%`;
+
+          if (status.logs && status.logs.length > 0) {
+            logBox.innerHTML = status.logs.map(l => `<div>${l}</div>`).join("");
+            logBox.scrollTop = logBox.scrollHeight;
+          }
+
+          if (status.done) {
+            clearInterval(pollInterval);
+            btnMix.disabled = false;
+            btnMix.classList.remove("opacity-50", "cursor-not-allowed");
+            btnMix.innerHTML = `<i class="fa-solid fa-play"></i><span>Mezclar Sesión Ahora</span>`;
+
+            setTimeout(() => {
+              statusCard.classList.add("hidden");
+              showSessionResult(status.result);
+            }, 800);
+          } else if (status.error) {
+            clearInterval(pollInterval);
+            btnMix.disabled = false;
+            btnMix.classList.remove("opacity-50", "cursor-not-allowed");
+            btnMix.innerHTML = `<i class="fa-solid fa-play"></i><span>Mezclar Sesión Ahora</span>`;
+            alert("Error en la mezcla: " + status.error);
+          }
+        }, 800);
+
+      } catch (err) {
+        alert("Error al iniciar mezcla: " + err.message);
+        btnMix.disabled = false;
+        btnMix.classList.remove("opacity-50", "cursor-not-allowed");
+        btnMix.innerHTML = `<i class="fa-solid fa-play"></i><span>Mezclar Sesión Ahora</span>`;
+      }
+    }
+
+    // Mostrar panel de descarga y reproductor
+    function showSessionResult(result) {
+      const resultCard = document.getElementById("session-result-card");
+      const audioElem = document.getElementById("session-audio-element");
+      const btnWav = document.getElementById("btn-download-wav");
+      const btnMp3 = document.getElementById("btn-download-mp3");
+      const btnCue = document.getElementById("btn-download-cue");
+      const meta = document.getElementById("result-meta");
+      const cueContainer = document.getElementById("cue-sheet-list");
+
+      resultCard.classList.remove("hidden");
+      resultCard.scrollIntoView({ behavior: "smooth" });
+
+      btnWav.href = `/api/download/session/${encodeURIComponent(result.audio_filename)}`;
+      if (result.mp3_filename && btnMp3) {
+        btnMp3.href = `/api/download/session/${encodeURIComponent(result.mp3_filename)}`;
+        btnMp3.classList.remove("hidden");
+      } else if (btnMp3) {
+        btnMp3.classList.add("hidden");
+      }
+      btnCue.href = `/api/download/tracklist/${encodeURIComponent(result.cue_filename)}`;
+
+      audioElem.src = `/api/stream/output/${encodeURIComponent(result.audio_filename)}`;
+      meta.innerText = `Duración: ${formatTime(result.duration_seconds)} | Calidad: WAV (Lossless) y MP3 (256 kbps HQ) | Masterizado -0.5 dBFS`;
+
+      // Renderizar marcas de tiempo clicables
+      cueContainer.innerHTML = "";
+      result.cues.forEach(cue => {
+        const cueBtn = document.createElement("button");
+        cueBtn.className = "flex items-center justify-between p-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-purple-500/50 text-left transition group";
+        cueBtn.onclick = () => {
+          audioElem.currentTime = cue.start_seconds;
+          audioElem.play();
+          document.getElementById("player-track-now").innerText = `Reproduciendo: [${cue.format_timestamp}] ${cue.title}`;
+        };
+        cueBtn.innerHTML = `
+          <div class="truncate mr-2">
+            <span class="text-xs font-mono font-bold text-cyan-400 group-hover:text-cyan-300 mr-2">${cue.format_timestamp}</span>
+            <span class="text-xs font-semibold text-slate-300 group-hover:text-white truncate">${cue.title}</span>
+          </div>
+          <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-800 text-purple-300 shrink-0">
+            ${cue.camelot}
+          </span>
+        `;
+        cueContainer.appendChild(cueBtn);
+      });
+    }
+
+    function formatTime(seconds) {
+      if (!seconds || isNaN(seconds)) return "00:00";
+      const mins = Math.floor(seconds / 60);
+      const secs = Math.floor(seconds % 60);
+      return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    }
+
+    async function fetchCubeStatus() {
+      try {
+        const resp = await fetch("/api/cube/status");
+        if (!resp.ok) return;
+        const data = await resp.json();
+        const state = data.state || {};
+        const model = data.model || {};
+
+        const stepEl = document.getElementById("cube-step-text");
+        const sessEl = document.getElementById("cube-sessions-count");
+        const transEl = document.getElementById("cube-trans-count");
+        const badgeEl = document.getElementById("cube-badge-text");
+
+        if (state.current_step && stepEl) stepEl.innerText = state.current_step;
+        if (state.total_sessions && sessEl) sessEl.innerText = `${state.processed_sessions || 0} / ${state.total_sessions}`;
+        if (state.transitions_analyzed !== undefined && transEl) transEl.innerText = state.transitions_analyzed;
+
+        if (badgeEl) {
+          if (state.status === "running") {
+            badgeEl.innerText = "Aprendiendo...";
+          } else if (state.status === "idle") {
+            badgeEl.innerText = "Activo (Listo)";
+          }
+        }
+      } catch (e) {
+        console.error("Error fetching CuBe status:", e);
+      }
+    }
+
+    // Iniciar sondeo del estado de CuBe cada 4 segundos
+    fetchCubeStatus();
+    setInterval(fetchCubeStatus, 4000);
+
+    // ==========================================
+    // GESTIÓN DEL MODAL RICOUI DESIGN SYSTEM (DESIGN.md)
+    // ==========================================
+    let cachedDesignMarkdown = "";
+
+    async function openDesignModal() {
+      const modal = document.getElementById("design-modal");
+      modal.classList.remove("hidden");
+      document.body.style.overflow = "hidden";
+      
+      if (!cachedDesignMarkdown) {
+        try {
+          const resp = await fetch("/api/design");
+          if (resp.ok) {
+            const data = await resp.json();
+            cachedDesignMarkdown = data.markdown || "";
+            const rawEl = document.getElementById("design-md-raw");
+            if (rawEl) rawEl.innerText = cachedDesignMarkdown;
+          }
+        } catch (e) {
+          console.error("Error al cargar /api/design:", e);
+        }
+      }
+    }
+
+    function closeDesignModal() {
+      const modal = document.getElementById("design-modal");
+      modal.classList.add("hidden");
+      document.body.style.overflow = "";
+    }
+
+    function switchDesignTab(tabName) {
+      const tabs = ["tokens", "components", "markdown"];
+      tabs.forEach(t => {
+        const content = document.getElementById(`tab-${t}`);
+        const btn = document.getElementById(`tab-btn-${t}`);
+        if (t === tabName) {
+          content.classList.remove("hidden");
+          btn.className = "py-3 border-b-2 border-purple-500 text-purple-400 flex items-center gap-2 transition font-semibold";
+        } else {
+          content.classList.add("hidden");
+          btn.className = "py-3 border-b-2 border-transparent text-ink-muted hover:text-ink flex items-center gap-2 transition font-semibold";
+        }
+      });
+    }
+
+    async function copyDesignMarkdown() {
+      if (!cachedDesignMarkdown) return;
+      try {
+        await navigator.clipboard.writeText(cachedDesignMarkdown);
+        const btnText = document.getElementById("copy-btn-text");
+        btnText.innerText = "¡Copiado!";
+        setTimeout(() => { btnText.innerText = "Copiar Markdown"; }, 2000);
+      } catch (err) {
+        console.error("Error al copiar al portapapeles:", err);
+      }
+    }
+
+    // Esc para cerrar modal
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") {
+        closeDesignModal();
+      }
+    });
+  </script>
+
+  <!-- Modal RICOUI Design System Inspector -->
+  <div id="design-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-black/80 backdrop-blur-md transition-opacity duration-200" onclick="if(event.target === this) closeDesignModal();">
+    <div class="relative w-full max-w-5xl max-h-[90vh] bg-surface rounded-2xl border border-purple-500/40 shadow-2xl flex flex-col overflow-hidden text-slate-200">
+      
+      <!-- Modal Header -->
+      <div class="px-6 py-4 border-b border-hairline flex items-center justify-between bg-surface-card/60">
+        <div class="flex items-center space-x-3">
+          <div class="w-8 h-8 rounded-lg bg-purple-600/30 border border-purple-500/50 flex items-center justify-center text-purple-400">
+            <i class="fa-solid fa-palette text-sm"></i>
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <h2 class="text-base font-bold text-ink">AutoDJ Studio — Design System</h2>
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-cyan-950/70 text-cyan-300 border border-cyan-800/60">RICOUI DESIGN.md</span>
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-mono bg-purple-950/70 text-purple-300 border border-purple-800/60">dark theme</span>
+            </div>
+            <p class="text-xs text-ink-muted">Single source of truth para tokens de color, escalas tipográficas y componentes DJ</p>
+          </div>
+        </div>
+        <button onclick="closeDesignModal()" class="w-8 h-8 rounded-lg bg-surface-elevated hover:bg-slate-700/60 text-slate-400 hover:text-white flex items-center justify-center transition">
+          <i class="fa-solid fa-xmark text-sm"></i>
+        </button>
+      </div>
+
+      <!-- Tab Buttons -->
+      <div class="px-6 border-b border-hairline bg-surface/50 flex items-center space-x-6 text-xs font-semibold">
+        <button onclick="switchDesignTab('tokens')" id="tab-btn-tokens" class="py-3 border-b-2 border-purple-500 text-purple-400 flex items-center gap-2 transition">
+          <i class="fa-solid fa-swatchbook"></i>
+          <span>Tokens de Color & Tipografía</span>
+        </button>
+        <button onclick="switchDesignTab('components')" id="tab-btn-components" class="py-3 border-b-2 border-transparent text-ink-muted hover:text-ink flex items-center gap-2 transition">
+          <i class="fa-solid fa-cubes"></i>
+          <span>Anatomía de Componentes</span>
+        </button>
+        <button onclick="switchDesignTab('markdown')" id="tab-btn-markdown" class="py-3 border-b-2 border-transparent text-ink-muted hover:text-ink flex items-center gap-2 transition">
+          <i class="fa-solid fa-file-code"></i>
+          <span>DESIGN.md (Canónico)</span>
+        </button>
+      </div>
+
+      <!-- Tab Content Area (Scrollable) -->
+      <div class="flex-1 overflow-y-auto p-6 space-y-6">
+
+        <!-- TAB 1: TOKENS -->
+        <div id="tab-tokens" class="space-y-6">
+          <!-- Paleta de Colores -->
+          <div>
+            <h3 class="text-xs font-bold uppercase tracking-wider text-ink-subtle mb-3 flex items-center gap-2">
+              <i class="fa-solid fa-droplet text-purple-400"></i>
+              <span>Paleta Semántica de Colores</span>
+            </h3>
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+              
+              <!-- Canvas -->
+              <div class="p-3 rounded-xl bg-surface-card border border-hairline-soft space-y-2">
+                <div class="h-10 rounded-lg border border-slate-700/60" style="background-color: #070a13;"></div>
+                <div class="text-[11px]">
+                  <p class="font-bold text-ink">canvas</p>
+                  <p class="font-mono text-[10px] text-ink-muted">#070a13</p>
+                  <p class="text-[10px] text-ink-subtle mt-0.5">--color-canvas</p>
+                </div>
+              </div>
+
+              <!-- Surface -->
+              <div class="p-3 rounded-xl bg-surface-card border border-hairline-soft space-y-2">
+                <div class="h-10 rounded-lg border border-slate-700/60" style="background-color: #0f172a;"></div>
+                <div class="text-[11px]">
+                  <p class="font-bold text-ink">surface</p>
+                  <p class="font-mono text-[10px] text-ink-muted">#0f172a</p>
+                  <p class="text-[10px] text-ink-subtle mt-0.5">--color-surface</p>
+                </div>
+              </div>
+
+              <!-- Surface Card -->
+              <div class="p-3 rounded-xl bg-surface-card border border-hairline-soft space-y-2">
+                <div class="h-10 rounded-lg border border-slate-700/60" style="background-color: #131d35;"></div>
+                <div class="text-[11px]">
+                  <p class="font-bold text-ink">surface card</p>
+                  <p class="font-mono text-[10px] text-ink-muted">#131d35</p>
+                  <p class="text-[10px] text-ink-subtle mt-0.5">--color-surface-card</p>
+                </div>
+              </div>
+
+              <!-- Surface Elevated -->
+              <div class="p-3 rounded-xl bg-surface-card border border-hairline-soft space-y-2">
+                <div class="h-10 rounded-lg border border-slate-700/60" style="background-color: #1e293b;"></div>
+                <div class="text-[11px]">
+                  <p class="font-bold text-ink">surface elevated</p>
+                  <p class="font-mono text-[10px] text-ink-muted">#1e293b</p>
+                  <p class="text-[10px] text-ink-subtle mt-0.5">--color-surface-elevated</p>
+                </div>
+              </div>
+
+              <!-- Primary Purple -->
+              <div class="p-3 rounded-xl bg-surface-card border border-purple-500/30 space-y-2">
+                <div class="h-10 rounded-lg shadow-lg" style="background-color: #8b5cf6; box-shadow: 0 0 14px rgba(139, 92, 246, 0.4);"></div>
+                <div class="text-[11px]">
+                  <p class="font-bold text-purple-300">primary purple</p>
+                  <p class="font-mono text-[10px] text-ink-muted">#8b5cf6</p>
+                  <p class="text-[10px] text-ink-subtle mt-0.5">--color-primary-purple</p>
+                </div>
+              </div>
+
+              <!-- Accent Cyan -->
+              <div class="p-3 rounded-xl bg-surface-card border border-cyan-500/30 space-y-2">
+                <div class="h-10 rounded-lg shadow-lg" style="background-color: #06b6d4; box-shadow: 0 0 14px rgba(6, 182, 212, 0.4);"></div>
+                <div class="text-[11px]">
+                  <p class="font-bold text-cyan-300">accent cyan</p>
+                  <p class="font-mono text-[10px] text-ink-muted">#06b6d4</p>
+                  <p class="text-[10px] text-ink-subtle mt-0.5">--color-accent-cyan</p>
+                </div>
+              </div>
+
+              <!-- Accent Emerald -->
+              <div class="p-3 rounded-xl bg-surface-card border border-emerald-500/30 space-y-2">
+                <div class="h-10 rounded-lg shadow-lg" style="background-color: #10b981; box-shadow: 0 0 14px rgba(16, 185, 129, 0.4);"></div>
+                <div class="text-[11px]">
+                  <p class="font-bold text-emerald-300">accent emerald</p>
+                  <p class="font-mono text-[10px] text-ink-muted">#10b981</p>
+                  <p class="text-[10px] text-ink-subtle mt-0.5">--color-accent-emerald</p>
+                </div>
+              </div>
+
+              <!-- Accent Rose -->
+              <div class="p-3 rounded-xl bg-surface-card border border-rose-500/30 space-y-2">
+                <div class="h-10 rounded-lg shadow-lg" style="background-color: #f43f5e; box-shadow: 0 0 14px rgba(244, 63, 94, 0.4);"></div>
+                <div class="text-[11px]">
+                  <p class="font-bold text-rose-300">accent rose</p>
+                  <p class="font-mono text-[10px] text-ink-muted">#f43f5e</p>
+                  <p class="text-[10px] text-ink-subtle mt-0.5">--color-accent-rose</p>
+                </div>
+              </div>
+
+              <!-- Accent Amber -->
+              <div class="p-3 rounded-xl bg-surface-card border border-amber-500/30 space-y-2">
+                <div class="h-10 rounded-lg shadow-lg" style="background-color: #f59e0b; box-shadow: 0 0 14px rgba(245, 158, 11, 0.4);"></div>
+                <div class="text-[11px]">
+                  <p class="font-bold text-amber-300">accent amber</p>
+                  <p class="font-mono text-[10px] text-ink-muted">#f59e0b</p>
+                  <p class="text-[10px] text-ink-subtle mt-0.5">--color-accent-amber</p>
+                </div>
+              </div>
+
+              <!-- Inks -->
+              <div class="p-3 rounded-xl bg-surface-card border border-hairline-soft space-y-2">
+                <div class="h-10 rounded-lg bg-slate-900 border border-slate-700 flex items-center justify-center space-x-1 px-1">
+                  <span class="w-3 h-3 rounded-full bg-white" title="#f8fafc"></span>
+                  <span class="w-3 h-3 rounded-full bg-slate-400" title="#94a3b8"></span>
+                  <span class="w-3 h-3 rounded-full bg-slate-600" title="#64748b"></span>
+                </div>
+                <div class="text-[11px]">
+                  <p class="font-bold text-ink">ink hierarchy</p>
+                  <p class="font-mono text-[10px] text-ink-muted">f8fafc / 94a3b8</p>
+                  <p class="text-[10px] text-ink-subtle mt-0.5">--color-ink-*</p>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Escala Tipográfica -->
+          <div>
+            <h3 class="text-xs font-bold uppercase tracking-wider text-ink-subtle mb-3 flex items-center gap-2">
+              <i class="fa-solid fa-font text-cyan-400"></i>
+              <span>Escala Tipográfica & Ratios</span>
+            </h3>
+            <div class="bg-surface-card rounded-xl border border-hairline-soft divide-y divide-hairline">
+              <div class="p-3 flex items-center justify-between">
+                <div>
+                  <span class="text-xs font-mono text-purple-400 mr-3">Display 32px</span>
+                  <span class="text-2xl font-black text-ink">AutoDJ Workstation</span>
+                </div>
+                <span class="text-[11px] font-mono text-ink-subtle">--font-size-display</span>
+              </div>
+              <div class="p-3 flex items-center justify-between">
+                <div>
+                  <span class="text-xs font-mono text-cyan-400 mr-3">Title Large 24px</span>
+                  <span class="text-xl font-bold text-ink">Transiciones Armónicas por Stems</span>
+                </div>
+                <span class="text-[11px] font-mono text-ink-subtle">--font-size-title-lg</span>
+              </div>
+              <div class="p-3 flex items-center justify-between">
+                <div>
+                  <span class="text-xs font-mono text-cyan-400 mr-3">Title Medium 18px</span>
+                  <span class="text-base font-semibold text-ink">Ajustes de la Mezcla y Filtros</span>
+                </div>
+                <span class="text-[11px] font-mono text-ink-subtle">--font-size-title-md</span>
+              </div>
+              <div class="p-3 flex items-center justify-between">
+                <div>
+                  <span class="text-xs font-mono text-slate-400 mr-3">Body 14px</span>
+                  <span class="text-sm text-ink-muted">Alineación por rejilla de bombos de 64 beats continuos.</span>
+                </div>
+                <span class="text-[11px] font-mono text-ink-subtle">--font-size-body</span>
+              </div>
+              <div class="p-3 flex items-center justify-between">
+                <div>
+                  <span class="text-xs font-mono text-emerald-400 mr-3">Monospace HUD 13px</span>
+                  <span class="text-xs font-mono text-emerald-300">140.00 BPM | Camelot: 8A | Sync Locked 100%</span>
+                </div>
+                <span class="text-[11px] font-mono text-ink-subtle">--font-size-mono</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 2: COMPONENTS -->
+        <div id="tab-components" class="hidden space-y-6">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            
+            <!-- Component 1: Action Button -->
+            <div class="p-4 rounded-xl bg-surface-card border border-hairline-soft space-y-3">
+              <h4 class="text-xs font-bold text-ink flex items-center gap-2">
+                <i class="fa-solid fa-play text-purple-400"></i>
+                <span>Action Button (Primary)</span>
+              </h4>
+              <p class="text-[11px] text-ink-muted">Trigger principal con resplandor neón violeta y estados interactivos.</p>
+              <div class="flex flex-wrap gap-2 pt-2">
+                <button class="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs shadow-lg transition flex items-center gap-2" style="box-shadow: 0 0 16px rgba(139, 92, 246, 0.4);">
+                  <i class="fa-solid fa-play"></i>
+                  <span>Mezclar Sesión</span>
+                </button>
+                <button class="px-4 py-2 rounded-xl bg-purple-600/50 text-purple-200/70 font-bold text-xs cursor-not-allowed flex items-center gap-2" disabled>
+                  <i class="fa-solid fa-compact-disc fa-spin"></i>
+                  <span>Mezclando...</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Component 2: Audio Track Card -->
+            <div class="p-4 rounded-xl bg-surface-card border border-hairline-soft space-y-3">
+              <h4 class="text-xs font-bold text-ink flex items-center gap-2">
+                <i class="fa-solid fa-music text-cyan-400"></i>
+                <span>Audio Track Card</span>
+              </h4>
+              <div class="p-3 rounded-xl bg-slate-900/90 border border-slate-700/60 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                  <div class="w-8 h-8 rounded-lg bg-purple-950 text-purple-400 flex items-center justify-center text-xs">
+                    <i class="fa-solid fa-wave-square"></i>
+                  </div>
+                  <div>
+                    <p class="text-xs font-bold text-ink">Metro_Anthem_140BPM.wav</p>
+                    <p class="text-[10px] text-ink-subtle">4:28 | Camelot 8A (Am)</p>
+                  </div>
+                </div>
+                <span class="px-2 py-0.5 rounded-full bg-cyan-950 text-cyan-300 border border-cyan-800 text-[10px] font-mono">140.0 BPM</span>
+              </div>
+            </div>
+
+            <!-- Component 3: Status Badge -->
+            <div class="p-4 rounded-xl bg-surface-card border border-hairline-soft space-y-3">
+              <h4 class="text-xs font-bold text-ink flex items-center gap-2">
+                <i class="fa-solid fa-circle-dot text-emerald-400"></i>
+                <span>Status Badge / Chip</span>
+              </h4>
+              <div class="flex flex-wrap gap-2">
+                <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-950/60 text-emerald-300 border border-emerald-700/50 flex items-center gap-1.5">
+                  <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                  <span>Modelo Conectado</span>
+                </span>
+                <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-purple-950/60 text-purple-300 border border-purple-700/50 flex items-center gap-1.5">
+                  <span class="w-2 h-2 rounded-full bg-purple-400 animate-pulse"></span>
+                  <span>Stems Demucs v4</span>
+                </span>
+              </div>
+            </div>
+
+            <!-- Component 4: Telemetry HUD -->
+            <div class="p-4 rounded-xl bg-surface-card border border-hairline-soft space-y-3">
+              <h4 class="text-xs font-bold text-ink flex items-center gap-2">
+                <i class="fa-solid fa-gauge-high text-cyan-400"></i>
+                <span>Real-Time Telemetry HUD</span>
+              </h4>
+              <div class="p-2.5 rounded-xl bg-slate-900 border border-slate-800 space-y-2">
+                <div class="flex justify-between text-[11px] font-mono">
+                  <span class="text-purple-300">Subiendo 3/5</span>
+                  <span class="text-cyan-300 font-bold">68%</span>
+                </div>
+                <div class="w-full bg-slate-800 rounded-full h-2 overflow-hidden">
+                  <div class="bg-gradient-to-r from-purple-500 to-cyan-400 h-full rounded-full" style="width: 68%;"></div>
+                </div>
+                <div class="flex justify-between text-[10px] font-mono text-ink-subtle">
+                  <span>34.2 MB / 50.1 MB</span>
+                  <span>12.4 MB/s</span>
+                  <span>ETA 00:02</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- TAB 3: DESIGN.MD SOURCE -->
+        <div id="tab-markdown" class="hidden space-y-4">
+          <div class="flex items-center justify-between">
+            <p class="text-xs text-ink-muted">Contenido cargado en vivo desde <span class="font-mono text-purple-400">/api/design</span> (y:/autodj/DESIGN.md):</p>
+            <div class="flex items-center space-x-2">
+              <button onclick="copyDesignMarkdown()" id="btn-copy-design" class="px-3 py-1.5 rounded-lg bg-surface-elevated hover:bg-slate-700 text-xs text-slate-300 hover:text-white border border-slate-700 flex items-center gap-1.5 transition">
+                <i class="fa-regular fa-copy"></i>
+                <span id="copy-btn-text">Copiar Markdown</span>
+              </button>
+              <a href="/api/design" target="_blank" class="px-3 py-1.5 rounded-lg bg-purple-950/60 hover:bg-purple-900/80 text-xs text-purple-300 hover:text-white border border-purple-700/50 flex items-center gap-1.5 transition">
+                <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                <span>Ver JSON API</span>
+              </a>
+            </div>
+          </div>
+          <pre id="design-md-raw" class="p-4 rounded-xl bg-slate-950 border border-slate-800 text-[11px] font-mono text-slate-300 overflow-x-auto whitespace-pre leading-relaxed max-h-[500px]">Cargando especificación DESIGN.md...</pre>
+        </div>
+
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="px-6 py-3 border-t border-hairline bg-surface-card/60 flex items-center justify-between text-xs text-ink-muted">
+        <span class="flex items-center gap-1.5">
+          <i class="fa-brands fa-github text-purple-400"></i>
+          <span>Especificación oficial: <a href="https://github.com/ricocc/ricoui-design-md" target="_blank" class="underline hover:text-white text-purple-300">ricocc/ricoui-design-md</a></span>
+        </span>
+        <button onclick="closeDesignModal()" class="px-4 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-500 text-white font-semibold transition">
+          Cerrar
+        </button>
+      </div>
+
+    </div>
+  </div>
+</html>

@@ -1,0 +1,23 @@
+services:
+  autodj:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: autodj
+    restart: unless-stopped
+    ports:
+      - "8095:8095"
+    volumes:
+      - ./app:/app
+      - ./input:/app/input
+      - ./output:/app/output
+      - /mnt/ssd/MúSiCa/CuBe:/cube_music:ro
+      - /mnt/ssd/MúSiCa/THeNaTuRaL:/natural_music:ro
+      - /mnt/ssd/MúSiCa/MeTRo:/metro_music:ro
+      - "/mnt/ssd/MúSiCa/The RaDiCaL:/radical_music:ro"
+      - /mnt/ssd/MúSiCa:/music_library:ro
+      - /home/juanjo/logs:/logs
+    stdin_open: true
+    tty: true
+    working_dir: /app
+    command: uvicorn web:app --host 0.0.0.0 --port 8095 --reload

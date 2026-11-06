@@ -1,0 +1,81 @@
+{
+  "style_name": "Resident DJ Style Model (CuBe, The Natural, Metro & Radical)",
+  "description": "Modelo de ingeniería inversa y aprendizaje profundo de técnicas de cabina aprendido de las sesiones de CuBe Dance Club, THeNaTuRaL, Metro Dance Club y The RaDiCaL (DJs residentes).",
+  "analyzed_transitions_count": 186,
+  "sources_analyzed": {
+    "CuBe": 21,
+    "THeNaTuRaL": 165
+  },
+  "sessions_analyzed": [
+    "2º aniversario",
+    "Migue - El origen de la Musica (CUBE) - Black Jack 17-09-2016",
+    "THe NaTuRaL - NaViDaD 04-05 - CD 1",
+    "THe NaTuRaL - NaViDaD 04-05 - CD 2",
+    "THe NaTuRaL - ReiNauGuRaCióN (1.10.05)",
+    "THe NaTuRaL - SeSióN VaLeNTiNo KaNZiaNy",
+    "THe NaTuRaL - VoLuMeN 1 (2004) - MiGue",
+    "THe NaTuRaL - VoLuMeN 10 (2005) - RuBeN",
+    "THe NaTuRaL - VoLuMeN 11 (2005) - MiGue",
+    "THe NaTuRaL - VoLuMeN 12 (2005)",
+    "THe NaTuRaL - VoLuMeN 13 (2005) - MiGue",
+    "THe NaTuRaL - VoLuMeN 14 NaViDaD 05-06 - MiGue",
+    "THe NaTuRaL - VoLuMeN 2 (2004)",
+    "THe NaTuRaL - VoLuMeN 3 (2004) - MiGue",
+    "THe NaTuRaL - VoLuMeN 4 (2004) - RuBeN"
+  ],
+  "tempo_profile": {
+    "mean_bpm": 136.91,
+    "min_bpm": 0.0,
+    "max_bpm": 184.57,
+    "recommended_bpm": 136.0
+  },
+  "entry_point_rules": {
+    "where_to_enter": "El segundo tema se introduce en la pista saliente calculando exactamente N compases hacia atrás desde su clímax o drop principal.",
+    "entry_point_in_track1_ratio_mean": 0.51,
+    "common_entry_contexts": {
+      "breakdown_pre_climax": "67.2%",
+      "groove_layering": "32.8%"
+    },
+    "structural_rationale": "El DJ utiliza el parón (breakdown) o puente de la canción saliente como lecho acústico para construir la tensión de la nueva canción, logrando que el clímax de ambas rompa en el mismo golpe de bombo 1 del compás sin solapar bombos durante la subida."
+  },
+  "beat_counting_rules": {
+    "canonical_rule": "Regla del 4 y el 8 (frases canónicas de 32 bombos / 8 compases)",
+    "lead_in_beats_distribution": {
+      "32_bombos_8_compases": "12.4%",
+      "64_bombos_16_compases": "44.1%",
+      "160_bombos_40_compases": "6.5%",
+      "96_bombos_24_compases": "9.1%",
+      "224_bombos_56_compases": "7.0%",
+      "192_bombos_48_compases": "7.0%",
+      "128_bombos_32_compases": "14.0%"
+    },
+    "median_lead_in_bars": 16,
+    "median_lead_in_beats": 64,
+    "explanation": "La intro del tema entrante dura exactamente un múltiplo estricto de frases canónicas (32, 64 o 96 bombos), lo que garantiza que nunca se corte un compás a medias."
+  },
+  "eq_and_filtering_rules": {
+    "hpf_cutoff_hz": 250.0,
+    "incoming_track_intro_eq": "Filtro paso alto a 250 Hz durante la intro para permitir que solo percusión media-aguda, sintes y vocales entren sobre el tema que está sonando, sin colisión ni saturación en los subgraves.",
+    "bass_swap_moment": "Tiempo 1 exacto del impacto del drop (downbeat drop unison)",
+    "bass_swap_action": "Intercambio instantáneo de graves: el tema entrante abre 100% de graves/subgraves, y el tema saliente corta sus graves a 250 Hz con HighpassFilter.",
+    "coexistence_volume_envelope": {
+      "start_volume": 0.75,
+      "end_volume": 0.55,
+      "curve": "Atenuación suave y progresiva",
+      "rationale": "La canción saliente reduce su volumen suavemente del 75% al 55% para que sus melodías y vocales acompañen la nueva base rítmica sin ensuciar la mezcla."
+    }
+  },
+  "coexistence_duration_rules": {
+    "blend_philosophy": "Mezcla Larga (Long Blend): la pista saliente se mantiene cuadrada frase a frase hasta casi el final de la canción.",
+    "mean_coexistence_bars": 39,
+    "mean_coexistence_beats": 156,
+    "mean_coexistence_seconds": 69.8,
+    "mean_track1_retention_ratio": 0.92,
+    "fadeout_bars": 8,
+    "fadeout_beats": 32,
+    "fadeout_technique": "Disolución en los últimos 8 compases con reverberación suave (room 0.40, wet 0.30) y curva de salida exponencial."
+  },
+  "playback_integrity_rules": {
+    "track1_playback_continuity": "100% sagrada e ininterrumpida. La pista 1 no sufre saltos temporales, recortes de compases ni desfases al entrar la segunda."
+  }
+}

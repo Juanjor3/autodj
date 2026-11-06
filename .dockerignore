@@ -1,0 +1,11 @@
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.git
+.gitignore
+.env
+input/*
+!input/.gitkeep
+output/*
+!output/.gitkeep
