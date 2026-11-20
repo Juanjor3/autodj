@@ -90,6 +90,19 @@ def get_index():
     return HTMLResponse(content=index_file.read_text(encoding="utf-8"))
 
 
+@app.get("/icon.svg")
+@app.get("/favicon.ico")
+def get_icon():
+    icon_file = TEMPLATES_DIR / "autodj_icon.svg"
+    if not icon_file.exists():
+        raise HTTPException(status_code=404, detail="Icono no encontrado")
+    return FileResponse(
+        path=icon_file,
+        media_type="image/svg+xml",
+        headers={"Cache-Control": "public, max-age=3600"},
+    )
+
+
 @app.get("/api/tracks")
 def list_tracks():
     tracks = []

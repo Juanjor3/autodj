@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" fill="none">
+  <defs>
+    <linearGradient id="adj-bg" x1="6" y1="4" x2="58" y2="60" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#172342"/>
+      <stop offset="55%" stop-color="#0d152a"/>
+      <stop offset="100%" stop-color="#070a13"/>
+    </linearGradient>
+    <linearGradient id="adj-rim" x1="4" y1="4" x2="60" y2="60" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#a78bfa" stop-opacity="0.9"/>
+      <stop offset="50%" stop-color="#06b6d4" stop-opacity="0.72"/>
+      <stop offset="100%" stop-color="#10b981" stop-opacity="0.65"/>
+    </linearGradient>
+    <linearGradient id="adj-vinyl" x1="12" y1="12" x2="46" y2="52" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#1e293b"/>
+      <stop offset="50%" stop-color="#0b1222"/>
+      <stop offset="100%" stop-color="#16213c"/>
+    </linearGradient>
+    <linearGradient id="adj-neon" x1="14" y1="14" x2="50" y2="50" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#c4b5fd"/>
+      <stop offset="50%" stop-color="#38bdf8"/>
+      <stop offset="100%" stop-color="#34d399"/>
+    </linearGradient>
+    <radialGradient id="adj-glow" cx="28" cy="34" r="24" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#8b5cf6" stop-opacity="0.32"/>
+      <stop offset="60%" stop-color="#06b6d4" stop-opacity="0.10"/>
+      <stop offset="100%" stop-color="#06b6d4" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Dark glass squircle frame -->
+  <rect x="2" y="2" width="60" height="60" rx="16" fill="url(#adj-bg)" stroke="url(#adj-rim)" stroke-width="1.6"/>
+  <rect x="2" y="2" width="60" height="60" rx="16" fill="url(#adj-glow)"/>
+
+  <!-- Precision Vinyl Platter -->
+  <circle cx="29" cy="34" r="18.5" fill="url(#adj-vinyl)" stroke="url(#adj-neon)" stroke-width="1.8"/>
+  <!-- Fine vinyl grooves (specular arcs) -->
+  <path d="M16.5 27 A14.5 14.5 0 0 1 35 20.8" stroke="#a78bfa" stroke-opacity="0.48" stroke-width="1.2" stroke-linecap="round"/>
+  <path d="M19.5 29 A11 11 0 0 1 33.2 24.2" stroke="#38bdf8" stroke-opacity="0.52" stroke-width="1.1" stroke-linecap="round"/>
+  <path d="M41.5 41 A14.5 14.5 0 0 1 23 47.2" stroke="#34d399" stroke-opacity="0.42" stroke-width="1.2" stroke-linecap="round"/>
+
+  <!-- Center glowing hub with harmonic waveform -->
+  <circle cx="29" cy="34" r="6.8" fill="#091020" stroke="url(#adj-neon)" stroke-width="1.8"/>
+  <path d="M25.5 34.5 V33.5 M27.8 36.2 V31.8 M30.2 35.5 V32.5 M32.5 34.8 V33.2" stroke="#f8fafc" stroke-width="1.4" stroke-linecap="round"/>
+
+  <!-- Precision DJ Tonearm -->
+  <circle cx="49.5" cy="16.5" r="3.4" fill="#0d152a" stroke="#c4b5fd" stroke-width="1.8"/>
+  <circle cx="49.5" cy="16.5" r="1.2" fill="#f8fafc"/>
+  <path d="M49.5 19.9 L49.5 31.5 L42.8 40.5" stroke="url(#adj-neon)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Stylus cartridge & emerald cue glow -->
+  <rect x="39.5" y="39.2" width="4.8" height="2.6" rx="1.2" transform="rotate(-52 41.9 40.5)" fill="#34d399"/>
+
+  <!-- Subtle AI beat-sync spark (top-left) -->
+  <path d="M15.5 12.5 L16.5 15.2 L19.2 16.2 L16.5 17.2 L15.5 19.9 L14.5 17.2 L11.8 16.2 L14.5 15.2 Z" fill="#38bdf8"/>
+</svg>
