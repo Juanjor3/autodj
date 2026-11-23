@@ -945,34 +945,52 @@
         if (!resp.ok) throw new Error("Error al procesar la mezcla");
 
         // Polling de estado
+        if (pollInterval) clearInterval(pollInterval);
+        let pollErrors = 0;
         pollInterval = setInterval(async () => {
-          const statusResp = await fetch("/api/status");
-          const status = await statusResp.json();
+          try {
+            const statusResp = await fetch("/api/status");
+            if (!statusResp.ok) throw new Error(`HTTP ${statusResp.status}`);
+            const status = await statusResp.json();
+            pollErrors = 0;
 
-          progressBar.style.width = `${status.progress}%`;
-          progressPct.innerText = `${status.progress}%`;
+            progressBar.style.width = `${status.progress}%`;
+            progressPct.innerText = `${status.progress}%`;
 
-          if (status.logs && status.logs.length > 0) {
-            logBox.innerHTML = status.logs.map(l => `<div>${l}</div>`).join("");
-            logBox.scrollTop = logBox.scrollHeight;
-          }
+            if (status.logs && status.logs.length > 0) {
+              logBox.innerHTML = status.logs.map(l => `<div>${escapeHtml(l)}</div>`).join("");
+              logBox.scrollTop = logBox.scrollHeight;
+            }
 
-          if (status.done) {
-            clearInterval(pollInterval);
-            btnMix.disabled = false;
-            btnMix.classList.remove("opacity-50", "cursor-not-allowed");
-            btnMix.innerHTML = `<i class="fa-solid fa-play"></i><span>Mezclar Sesión Ahora</span>`;
+            if (status.done) {
+              clearInterval(pollInterval);
+              pollInterval = null;
+              btnMix.disabled = false;
+              btnMix.classList.remove("opacity-50", "cursor-not-allowed");
+              btnMix.innerHTML = `<i class="fa-solid fa-play"></i><span>Mezclar Sesión Ahora</span>`;
 
-            setTimeout(() => {
-              statusCard.classList.add("hidden");
-              showSessionResult(status.result);
-            }, 800);
-          } else if (status.error) {
-            clearInterval(pollInterval);
-            btnMix.disabled = false;
-            btnMix.classList.remove("opacity-50", "cursor-not-allowed");
-            btnMix.innerHTML = `<i class="fa-solid fa-play"></i><span>Mezclar Sesión Ahora</span>`;
-            alert("Error en la mezcla: " + status.error);
+              setTimeout(() => {
+                statusCard.classList.add("hidden");
+                showSessionResult(status.result);
+              }, 800);
+            } else if (status.error) {
+              clearInterval(pollInterval);
+              pollInterval = null;
+              btnMix.disabled = false;
+              btnMix.classList.remove("opacity-50", "cursor-not-allowed");
+              btnMix.innerHTML = `<i class="fa-solid fa-play"></i><span>Mezclar Sesión Ahora</span>`;
+              alert("Error en la mezcla: " + status.error);
+            }
+          } catch (pollErr) {
+            pollErrors += 1;
+            if (pollErrors >= 3) {
+              clearInterval(pollInterval);
+              pollInterval = null;
+              btnMix.disabled = false;
+              btnMix.classList.remove("opacity-50", "cursor-not-allowed");
+              btnMix.innerHTML = `<i class="fa-solid fa-play"></i><span>Mezclar Sesión Ahora</span>`;
+              alert("Error consultando estado de la mezcla: " + pollErr.message);
+            }
           }
         }, 800);
 
