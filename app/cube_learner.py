@@ -116,29 +116,18 @@ def get_music_roots() -> List[Dict[str, Any]]:
                     except Exception:
                         pass
 
-    # 3. En Host Windows (Z:\MúSiCa o Z:\Música)
+    # 3. Directorio configurado por variable de entorno (opcional)
     if not roots:
-        for base_win in [Path("Z:/MúSiCa"), Path("Z:/Música"), Path("z:/MúSiCa"), Path("z:/Música")]:
-            if base_win.exists():
+        env_dir = os.environ.get("MUSIC_LIBRARY_DIR")
+        if env_dir:
+            base_env = Path(env_dir)
+            if base_env.exists():
                 for sc in sources_config:
                     for sub in sc["subdirs"]:
-                        candidate = base_win / sub
+                        candidate = base_env / sub
                         if candidate.exists():
                             roots.append({"name": sc["name"], "path": candidate})
                             break
-                if roots:
-                    break
-
-    # 4. Fallback en Linux nativo (/mnt/ssd/MúSiCa)
-    if not roots:
-        base_lnx = Path("/mnt/ssd/MúSiCa")
-        if base_lnx.exists():
-            for sc in sources_config:
-                for sub in sc["subdirs"]:
-                    candidate = base_lnx / sub
-                    if candidate.exists():
-                        roots.append({"name": sc["name"], "path": candidate})
-                        break
 
     return roots
 

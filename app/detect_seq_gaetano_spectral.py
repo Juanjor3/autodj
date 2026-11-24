@@ -1,10 +1,13 @@
+import sys
 from pathlib import Path
 from detect_subidones_spectral import analyze_track_subidones
 
-f1 = Path('/mnt/ssd/MúSiCa/TeMaZoS/Sequential One - Imagination (Main DJ Version).flac')
-f2 = Path('/mnt/ssd/MúSiCa/TeMaZoS/Gaetano Parisio - Outdated (A1).flac')
+files = [Path(p) for p in sys.argv[1:]] or [
+    Path("./input/track1.flac"),
+    Path("./input/track2.flac"),
+]
 
-for f in [f1, f2]:
+for f in files:
     info = analyze_track_subidones(f)
     print(f"\n========================================================")
     print(f"ANÁLISIS ESPECTRAL DE: {info['name']}")
